@@ -28,10 +28,11 @@ jobs:
       - name: Checkout current repo
         uses: actions/checkout@v4
 
-      - name: Checkout upstream repo
+      - name: Checkout Bot API source repo
         uses: actions/checkout@v4
         with:
-          repository: tdlib/telegram-bot-api
+          repository: Dedrimer/telegram-bot-api
+          ref: master
           path: telegram-bot-api
           submodules: recursive
 
@@ -118,6 +119,8 @@ jobs:
           platforms: ${{ matrix.arch }}
           build-args: |
             ALPINE_VERSION=${{ env.ALPINE_VERSION }}
+            TELEGRAM_BOT_API_REPOSITORY=https://github.com/Dedrimer/telegram-bot-api.git
+            TELEGRAM_BOT_API_REF=master
             nproc=${{ steps.build-params.outputs.nproc }}
           push: false
           load: true

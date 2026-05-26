@@ -1,11 +1,14 @@
-image_name := aiogram/telegram-bot-api
-image_tag := $(shell date +%Y%m%d)
+image_name ?= telegram-bot-api
+image_tag ?= $(shell date +%Y%m%d)
+source_repo ?= https://github.com/Dedrimer/telegram-bot-api.git
+source_ref ?= master
 
 .PHONY: build
 build:
-	rm -rf telegram-bot-api
-	git clone --recursive https://github.com/tdlib/telegram-bot-api.git
-	docker build -t $(image_name):$(image_tag) --build-arg nproc=$(shell nproc) .
+	docker build -t $(image_name):$(image_tag) \
+		--build-arg TELEGRAM_BOT_API_REPOSITORY=$(source_repo) \
+		--build-arg TELEGRAM_BOT_API_REF=$(source_ref) \
+		--build-arg nproc=$(shell nproc) .
 	docker tag $(image_name):$(image_tag) $(image_name):latest
 
 .PHONY: publish

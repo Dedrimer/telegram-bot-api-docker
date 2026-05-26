@@ -1,17 +1,15 @@
+# syntax=docker/dockerfile:1.4
 ARG ALPINE_VERSION=latest
 FROM alpine:${ALPINE_VERSION} AS build
 
-ARG TELEGRAM_BOT_API_REPOSITORY=https://github.com/Dedrimer/telegram-bot-api.git
-ARG TELEGRAM_BOT_API_REF=master
 ARG nproc=1
 
 ENV CXXFLAGS=""
 WORKDIR /usr/src/telegram-bot-api
 
 RUN apk add --no-cache --update alpine-sdk linux-headers git zlib-dev openssl-dev gperf cmake
-RUN git clone --recursive "${TELEGRAM_BOT_API_REPOSITORY}" . \
- && git checkout "${TELEGRAM_BOT_API_REF}" \
- && git submodule update --init --recursive
+COPY --from=telegram-bot-api-src . /usr/src/telegram-bot-api
+RUN if [ -d .git ]; then git submodule update --init --recursive; fi
 RUN mkdir -p build \
  && cd build \
  && cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX:PATH=.. .. \
