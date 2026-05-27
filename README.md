@@ -13,6 +13,20 @@ Before start, you will need to obtain `api-id` and `api-hash` as described in ht
 And then to start the Telegram Bot API all you need to do is
 `docker run -d -p 8081:8081 --name=telegram-bot-api --restart=always -v telegram-bot-api-data:/var/lib/telegram-bot-api -e TELEGRAM_API_ID=<api_id> -e TELEGRAM_API_HASH=<api-hash> aiogram/telegram-bot-api:latest`
 
+## Compatibility build
+
+For older x86_64 machines or hosts that are unstable with recent Alpine-based images, use `Dockerfile.compat`. It builds and runs on `debian:bookworm-slim`, which is more conservative than Alpine `latest`.
+
+```bash
+docker build -f Dockerfile.compat -t telegram-bot-api:compat .
+```
+
+The Makefile defaults to this compatibility Dockerfile. To use the Alpine Dockerfile explicitly, run:
+
+```bash
+make build dockerfile=Dockerfile alpine_version=3.21
+```
+
 ## Configuration
 
 Container can be configured via environment variables

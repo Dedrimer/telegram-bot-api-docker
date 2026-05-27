@@ -1,14 +1,27 @@
-ARG ALPINE_VERSION=3.21
-FROM alpine:${ALPINE_VERSION} AS build
+ARG DEBIAN_VERSION=bookworm-slim
+FROM debian:${DEBIAN_VERSION} AS build
 
 ARG TELEGRAM_BOT_API_REPOSITORY=https://github.com/Dedrimer/telegram-bot-api.git
 ARG TELEGRAM_BOT_API_REF=master
 ARG nproc=1
 
-ENV CXXFLAGS=""
+ENV DEBIAN_FRONTEND=noninteractive \
+    CXXFLAGS=""
 WORKDIR /usr/src/telegram-bot-api
 
-RUN apk add --no-cache --update alpine-sdk linux-headers git zlib-dev openssl-dev gperf cmake
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends \
+      build-essential \
+      ca-certificates \
+      cmake \
+      gperf \
+      git \
+      libssl-dev \
+      linux-libc-dev \
+      pkg-config \
+      zlib1g-dev \
+ && rm -rf /var/lib/apt/lists/*
+
 RUN git clone --recursive "${TELEGRAM_BOT_API_REPOSITORY}" . \
  && git checkout "${TELEGRAM_BOT_API_REF}" \
  && git submodule update --init --recursive
@@ -18,16 +31,23 @@ RUN mkdir -p build \
  && cmake --build . --target install -j ${nproc} \
  && strip /usr/src/telegram-bot-api/bin/telegram-bot-api
 
-FROM alpine:${ALPINE_VERSION}
+FROM debian:${DEBIAN_VERSION}
 
-ENV TELEGRAM_WORK_DIR="/var/lib/telegram-bot-api" \
+ENV DEBIAN_FRONTEND=noninteractive \
+    TELEGRAM_WORK_DIR="/var/lib/telegram-bot-api" \
     TELEGRAM_TEMP_DIR="/tmp/telegram-bot-api"
 
-RUN apk add --no-cache --update openssl libstdc++
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends \
+      ca-certificates \
+      libssl3 \
+      libstdc++6 \
+      zlib1g \
+ && rm -rf /var/lib/apt/lists/*
 COPY --from=build /usr/src/telegram-bot-api/bin/telegram-bot-api /usr/local/bin/telegram-bot-api
 COPY docker-entrypoint.sh /docker-entrypoint.sh
-RUN addgroup -g 101 -S telegram-bot-api \
- && adduser -S -D -H -u 101 -h ${TELEGRAM_WORK_DIR} -s /sbin/nologin -G telegram-bot-api -g telegram-bot-api telegram-bot-api \
+RUN groupadd --system --gid 101 telegram-bot-api \
+ && useradd --system --uid 101 --gid telegram-bot-api --home-dir ${TELEGRAM_WORK_DIR} --shell /usr/sbin/nologin --no-create-home telegram-bot-api \
  && chmod +x /docker-entrypoint.sh \
  && mkdir -p ${TELEGRAM_WORK_DIR} ${TELEGRAM_TEMP_DIR} \
  && chown telegram-bot-api:telegram-bot-api ${TELEGRAM_WORK_DIR} ${TELEGRAM_TEMP_DIR}

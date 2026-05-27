@@ -1,0 +1,54 @@
+# syntax=docker/dockerfile:1.4
+ARG DEBIAN_VERSION=bookworm-slim
+FROM debian:${DEBIAN_VERSION} AS build
+
+ARG nproc=1
+
+ENV DEBIAN_FRONTEND=noninteractive \
+    CXXFLAGS=""
+WORKDIR /usr/src/telegram-bot-api
+
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends \
+      build-essential \
+      ca-certificates \
+      cmake \
+      gperf \
+      git \
+      libssl-dev \
+      linux-libc-dev \
+      pkg-config \
+      zlib1g-dev \
+ && rm -rf /var/lib/apt/lists/*
+
+COPY --from=telegram-bot-api-src . /usr/src/telegram-bot-api
+RUN if [ -d .git ]; then git submodule update --init --recursive; fi
+RUN mkdir -p build \
+ && cd build \
+ && cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX:PATH=.. .. \
+ && cmake --build . --target install -j ${nproc} \
+ && strip /usr/src/telegram-bot-api/bin/telegram-bot-api
+
+FROM debian:${DEBIAN_VERSION}
+
+ENV DEBIAN_FRONTEND=noninteractive \
+    TELEGRAM_WORK_DIR="/var/lib/telegram-bot-api" \
+    TELEGRAM_TEMP_DIR="/tmp/telegram-bot-api"
+
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends \
+      ca-certificates \
+      libssl3 \
+      libstdc++6 \
+      zlib1g \
+ && rm -rf /var/lib/apt/lists/*
+COPY --from=build /usr/src/telegram-bot-api/bin/telegram-bot-api /usr/local/bin/telegram-bot-api
+COPY docker-entrypoint.sh /docker-entrypoint.sh
+RUN groupadd --system --gid 101 telegram-bot-api \
+ && useradd --system --uid 101 --gid telegram-bot-api --home-dir ${TELEGRAM_WORK_DIR} --shell /usr/sbin/nologin --no-create-home telegram-bot-api \
+ && chmod +x /docker-entrypoint.sh \
+ && mkdir -p ${TELEGRAM_WORK_DIR} ${TELEGRAM_TEMP_DIR} \
+ && chown telegram-bot-api:telegram-bot-api ${TELEGRAM_WORK_DIR} ${TELEGRAM_TEMP_DIR}
+
+EXPOSE 8081/tcp 8082/tcp
+ENTRYPOINT ["/docker-entrypoint.sh"]
