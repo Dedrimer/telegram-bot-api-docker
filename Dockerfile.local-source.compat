@@ -31,9 +31,13 @@ RUN mkdir -p build \
 
 FROM debian:${DEBIAN_VERSION}
 
+ARG TELEGRAM_BOT_API_VERSION=10.1.0
 ENV DEBIAN_FRONTEND=noninteractive \
     TELEGRAM_WORK_DIR="/var/lib/telegram-bot-api" \
-    TELEGRAM_TEMP_DIR="/tmp/telegram-bot-api"
+    TELEGRAM_TEMP_DIR="/tmp/telegram-bot-api" \
+    TELEGRAM_BOT_API_VERSION=${TELEGRAM_BOT_API_VERSION}
+LABEL org.opencontainers.image.title="telegram-bot-api" \
+      org.opencontainers.image.version=${TELEGRAM_BOT_API_VERSION}
 
 RUN apt-get update \
  && apt-get install -y --no-install-recommends \
