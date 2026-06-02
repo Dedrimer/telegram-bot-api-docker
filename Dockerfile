@@ -20,12 +20,9 @@ RUN mkdir -p build \
 
 FROM alpine:${ALPINE_VERSION}
 
-ARG TELEGRAM_BOT_API_VERSION=10.1.0
 ENV TELEGRAM_WORK_DIR="/var/lib/telegram-bot-api" \
-    TELEGRAM_TEMP_DIR="/tmp/telegram-bot-api" \
-    TELEGRAM_BOT_API_VERSION=${TELEGRAM_BOT_API_VERSION}
-LABEL org.opencontainers.image.title="telegram-bot-api" \
-      org.opencontainers.image.version=${TELEGRAM_BOT_API_VERSION}
+    TELEGRAM_TEMP_DIR="/tmp/telegram-bot-api"
+LABEL org.opencontainers.image.title="telegram-bot-api"
 
 RUN apk add --no-cache --update openssl libstdc++
 COPY --from=build /usr/src/telegram-bot-api/bin/telegram-bot-api /usr/local/bin/telegram-bot-api

@@ -42,7 +42,7 @@ jobs:
           HASH_VERSION=$(git rev-parse --short HEAD)
           
           # Get real version from the code
-          VERSION=$(cat telegram-bot-api/CMakeLists.txt | grep TelegramBotApi | cut -d " " -f3)
+          VERSION=$(cat telegram-bot-api/VERSION)
 
           # Convert IMAGE_TAG, HASH_VERSION and VERSION to lowercase (repository name must be lowercase)
           IMAGE_TAG=$(echo "$IMAGE_TAG" | awk '{print tolower($0)}')
