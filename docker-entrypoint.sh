@@ -78,7 +78,14 @@ append_flag_from_env() {
   fi
 }
 
+download_dir=$(printenv "TELEGRAM_DOWNLOAD_DIR") || download_dir=""
+if [ -n "$download_dir" ]; then
+  mkdir -p "$download_dir"
+  chown "${USERNAME}:${GROUPNAME}" "$download_dir"
+fi
+
 check_required_env "TELEGRAM_WORK_DIR"
+mkdir -p "${TELEGRAM_WORK_DIR}"
 chown "${USERNAME}:${GROUPNAME}" "${TELEGRAM_WORK_DIR}"
 
 # Telegram Bot API Server knows how to read the API ID and API Hash from a environment variable.
@@ -90,6 +97,7 @@ file_env "TELEGRAM_API_HASH" "TELEGRAM_API_HASH_FILE"
 # Potentially can be overwritten by environment variables, if needed, but is not recommended.
 append_arg_from_env "TELEGRAM_WORK_DIR" "--dir"
 check_required_env "TELEGRAM_TEMP_DIR"
+mkdir -p "${TELEGRAM_TEMP_DIR}"
 append_arg_from_env "TELEGRAM_TEMP_DIR" "--temp-dir"
 append_args "--username=${USERNAME}"
 append_args "--groupname=${GROUPNAME}"
